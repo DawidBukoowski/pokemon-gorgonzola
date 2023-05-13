@@ -1,4 +1,4 @@
-#Pokemon Gorgonzola
+# Pokemon Gorgonzola
 
 Autors: Dawid Bukowski & Jakub Owczarek
 
