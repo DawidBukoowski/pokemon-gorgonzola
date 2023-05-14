@@ -22,6 +22,10 @@ public class Player : MonoBehaviour
     }
     
     void Update() {
+        HandleMovement();
+    }
+
+    void HandleMovement() {
         var inputVector = gameInput.GetMovementVector();
         var moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
         const float playerRadius = .5f;
