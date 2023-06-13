@@ -17,6 +17,7 @@ public class PlayerAnimator : MonoBehaviour {
 
     private void Update() {
         animator.SetBool(IS_RUNNING, player.IsRunning());
+
         animator.SetFloat(X, player.GetLastDirection().x);
         animator.SetFloat(Y, player.GetLastDirection().z);
     }

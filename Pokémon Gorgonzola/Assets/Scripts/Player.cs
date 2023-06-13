@@ -7,9 +7,10 @@ public class Player : MonoBehaviour
 {
     public static Player Instance { get; private set; }
     
-    [SerializeField] private float moveDistance = 0.1f;
     [SerializeField] private GameInput gameInput;
-    
+    [SerializeField] private Rigidbody playerRigidbody;
+    [SerializeField] private float moveDistance = 3f;
+    [SerializeField] private float jumpForce = 5f;
     
     private bool isRunning;
     private Vector3 lastDirection;
@@ -17,10 +18,19 @@ public class Player : MonoBehaviour
         if (Instance != null) {
             Debug.Log("There is more than one Player instance!");
         }
-
         Instance = this;
     }
-    
+
+    void Start()
+    {
+        gameInput.JumpAction += GameInput_JumpAction;
+    }
+
+    private void GameInput_JumpAction(object sender, System.EventArgs e)
+    {
+        Jump();
+    }
+
     void Update() {
         HandleMovement();
     }
@@ -33,48 +43,49 @@ public class Player : MonoBehaviour
         var canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight,
             playerRadius, moveDir, moveDistance);
 
-        if (!canMove) {
-            // Cannot move towards moveDir
-            // Attempt only X movement
-            var moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
-            canMove = (moveDir.x < -.5f || moveDir.x > +.5f) && !Physics.CapsuleCast(transform.position,
-                transform.position + Vector3.up * playerHeight,
-                playerRadius, moveDirX, moveDistance);
-
-            if (canMove) {
-                moveDir = moveDirX;
-            }
-            else {
-                // Cannot move only X movement
-                // Attempt only Z movement
-                var moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
-                canMove = (moveDir.z < -.5f || moveDir.z > +.5f) && !Physics.CapsuleCast(transform.position,
-                    transform.position + Vector3.up * playerHeight,
-                    playerRadius, moveDirZ, moveDistance);
-
-                if (canMove) {
-                    moveDir = moveDirZ;
-                }
-            }
+        if (moveDir.x != 0 || moveDir.z != 0)
+        {
+            isRunning = true;
+        }
+        else
+        {
+            isRunning = false;
         }
 
-        if (canMove) {
-            transform.position += moveDir * moveDistance;
-        }
-        
-        isRunning = moveDir != Vector3.zero;
-        if (isRunning) {
+        if (moveDir != Vector3.zero)
+        {
             lastDirection = moveDir;
+
+            playerRigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+
+        }
+        else
+        {
+            playerRigidbody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionZ | RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
         }
 
     }
 
-    public bool IsRunning() {
+    void Jump()
+    {
+        playerRigidbody.velocity = new Vector3(playerRigidbody.velocity.x, 0, 0);
+        playerRigidbody.velocity += Vector3.up * jumpForce;
+    }
+
+    void FixedUpdate()
+    {
+        var inputVector = gameInput.GetMovementVector();
+        var moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
+        playerRigidbody.MovePosition(playerRigidbody.position + moveDir * moveDistance * Time.fixedDeltaTime);
+    }
+
+    public bool IsRunning()
+    {
         return isRunning;
     }
 
-    public Vector3 GetLastDirection() {
+    public Vector3 GetLastDirection()
+    {
         return lastDirection;
     }
-    
 }
